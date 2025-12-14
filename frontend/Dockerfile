@@ -1,10 +1,16 @@
-FROM node:20 AS build
+FROM node:20-alpine AS build
+
 WORKDIR /app
+
+# Удаляем проблемные файлы
+RUN rm -f package-lock.json
 COPY package*.json ./
-RUN npm install
+
+# Устанавливаем зависимости для Linux
+RUN npm install --platform=linux --arch=x64
+
 COPY . .
 RUN npm run build
-
 
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html

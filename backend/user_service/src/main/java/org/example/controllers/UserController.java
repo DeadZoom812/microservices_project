@@ -29,6 +29,12 @@ public class UserController {
         }
     }
 
+    @GetMapping("/exists/{id}")
+    public ResponseEntity<Boolean> userExists(@PathVariable Integer id) {
+        boolean exists = userService.findById(id).isPresent();
+        return ResponseEntity.ok(exists);
+    }
+
 
     public static class RegisterRequest {
         private String login;

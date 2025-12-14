@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserDetailServiceImpl implements UserDetailsService {
 
-    private UserService userService;
+    private org.example.services.UserService userService;
 
     public void UserDetailsServiceImpl(UserService userService) {
         this.userService = userService;
