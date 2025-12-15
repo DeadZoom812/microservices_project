@@ -1,10 +1,15 @@
 package org.example.controllers;
 
 import org.example.model.User;
+import org.example.model.UserDto;
 import org.example.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -12,6 +17,19 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private UserDto toDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setLogin(user.getLogin());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setMiddleName(user.getMiddleName());
+        return dto;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody RegisterRequest request) {
@@ -33,6 +51,27 @@ public class UserController {
     public ResponseEntity<Boolean> userExists(@PathVariable Integer id) {
         boolean exists = userService.findById(id).isPresent();
         return ResponseEntity.ok(exists);
+    }
+
+    @PostMapping("/auth/login")
+    public ResponseEntity<UserDto> login(@RequestBody LoginRequest request) {
+        Optional<User> userOpt = userService.findByLogin(request.getLogin());
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+                return ResponseEntity.ok(toDto(user));
+            }
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    public static class LoginRequest {
+        private String login;
+        private String password;
+        public String getLogin() { return login; }
+        public void setLogin(String login) { this.login = login; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
     }
 
 
