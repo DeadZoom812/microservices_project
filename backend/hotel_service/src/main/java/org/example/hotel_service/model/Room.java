@@ -18,6 +18,14 @@ public class Room {
     @Column(name = "image_url")
     private String imageUrl;
 
+    public Room() {}
+
+    public Room(String roomNumber, String status, String imageUrl) {
+        this.roomNumber = roomNumber;
+        this.status = status;
+        this.imageUrl = imageUrl;
+    }
+
 
     public Integer getId() {
         return id;
