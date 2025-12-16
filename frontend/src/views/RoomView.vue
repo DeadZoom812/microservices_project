@@ -143,7 +143,7 @@ const loadRoomData = async () => {
     });
     disabledDates.value = Array.from(dates);
     flatpickrConfig.value.disable = Array.from(dates);
-  } catch (err) {
+  } catch (error) {
     error.value = '❌ Ошибка загрузки данных';
   }
 };
