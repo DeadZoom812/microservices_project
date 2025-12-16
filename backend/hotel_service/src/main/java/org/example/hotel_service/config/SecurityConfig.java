@@ -23,8 +23,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register", "/api/users/auth/login","/api/rooms/*").permitAll()
-                        .requestMatchers("/api/bookings/*").authenticated()
+                        .requestMatchers("/api/users/register", "/api/users/auth/login","/api/rooms/**", "/api/bookings/room/**", "/api/bookings").permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(httpBasic -> httpBasic.disable())

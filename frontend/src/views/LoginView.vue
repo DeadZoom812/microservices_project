@@ -23,11 +23,11 @@
         />
       </div>
       <form @submit.prevent="handleLogin">
-        <button type="submit" :disabled="loading">
+        <button type="submit" :disabled="loading" class="auth-btn login-btn">
           {{ loading ? 'Вход...' : 'Войти' }}
         </button>
       </form>
-      <router-link to="/register" class="btn btn-outline">
+      <router-link to="/register" class="auth-btn register-btn mt-10">
         Зарегистрироваться
       </router-link>
       <div v-if="error" class="error">{{ error }}</div>
@@ -95,6 +95,16 @@ const handleLogin = async () => {
   border: 1px solid #ccc;
   border-radius: 4px;
   box-sizing: border-box;
+}
+.login-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+}
+
+.mt-10 {
+  margin-top: 10px;
+  display: block;
 }
 .btn {
   width: 100%;

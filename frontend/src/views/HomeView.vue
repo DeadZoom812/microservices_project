@@ -11,10 +11,10 @@
       <button @click="search" :disabled="!searchCheckIn || !searchCheckOut">Найти</button>
       <button v-if="isFiltered" @click="showAll">Показать все</button>
 
-      <router-link to="/register" class="btn btn-outline">
+      <router-link to="/register" class="auth-btn register-btn">
         Зарегистрироваться
       </router-link>
-      <router-link to="/profile" class="btn btn-outline">
+      <router-link to="/profile" class="auth-btn profile-btn">
         Профиль
       </router-link>
     </div>
@@ -25,7 +25,10 @@
       <div v-for="room in displayedRooms" :key="room.id" class="room-card">
         <img v-if="room.imageUrl" :src="room.imageUrl" :alt="`Номер ${room.roomNumber}`" />
         <h3>Номер {{ room.roomNumber }}</h3>
-        <span class="status" :class="room.status.toLowerCase()">{{ room.status }}</span>
+        <span class="status" :class="room.status.toLowerCase()">
+          {{ room.status }}
+          <span v-if="!isFiltered"> for today</span>
+        </span>
         <button
           @click="$router.push(`/room/${room.id}`)"
           class="details-btn"
@@ -171,5 +174,28 @@ button:disabled {
 .details-btn:hover {
   background: #0056b3;
   transform: translateX(2px);
+}
+.auth-btn {
+  padding: 10px 20px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.2s;
+  margin-left: 10px;
+  background: white;
+}
+.auth-btn:hover {
+  background: #007bff;
+  color: white;
+}
+.profile-btn {
+  border-color: #28a745;
+  color: #28a745;
+}
+.profile-btn:hover {
+  background: #28a745;
+  color: white;
 }
 </style>

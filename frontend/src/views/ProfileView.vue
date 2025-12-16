@@ -5,7 +5,7 @@
     <p><strong>Имя:</strong> {{ user.firstName }}</p>
     <p><strong>Фамилия:</strong> {{ user.lastName }}</p>
     <p><strong>Отчество:</strong> {{ user.middleName || '—' }}</p>
-    <button @click="logout" class="btn">Выйти</button>
+    <button @click="logout" class="btn btn-logout">Выйти</button>
     <router-link to="/home" class="btn btn-outline">
       Главная страница
     </router-link>
@@ -55,5 +55,16 @@ onMounted(() => {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+.btn-logout{
+  background: #dc3545;
+  margin-right: 10px;
+}
+.btn-outline{
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 </style>

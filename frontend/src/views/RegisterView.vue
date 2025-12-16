@@ -1,36 +1,39 @@
 <template>
-  <div class="register">
-    <h1>Регистрация</h1>
-
-    <form @submit.prevent="register">
-      <div>
+  <div class="register-container">
+    <h2>Регистрация</h2>
+    <form @submit.prevent="register" class="register-form">
+      <div class="form-group">
         <label>Логин:</label>
-        <input v-model="form.login" required />
+        <input v-model="form.login" type="text" required />
       </div>
-      <div>
+      <div class="form-group">
         <label>Пароль:</label>
         <input v-model="form.password" type="password" required />
       </div>
-      <div>
+      <div class="form-group">
         <label>Имя:</label>
-        <input v-model="form.firstName" required />
+        <input v-model="form.firstName" type="text" required />
       </div>
-      <div>
+      <div class="form-group">
         <label>Фамилия:</label>
-        <input v-model="form.lastName" required />
+        <input v-model="form.lastName" type="text" required />
       </div>
-      <div>
+      <div class="form-group">
         <label>Отчество:</label>
-        <input v-model="form.middleName" />
+        <input v-model="form.middleName" type="text" />
       </div>
 
-      <button type="submit" :disabled="loading">Зарегистрироваться</button>
+      <div class="form-actions">
+        <button type="submit" :disabled="loading" class="auth-btn login-btn">
+          Зарегистрироваться
+        </button>
+        <router-link to="/" class="auth-btn back-btn">← Назад</router-link>
+      </div>
+
+      <div v-if="error" class="error">{{ error }}</div>
+      <div v-if="success" class="success">Регистрация успешна!</div>
+
     </form>
-
-    <div v-if="error" class="error">{{ error }}</div>
-    <div v-if="success" class="success">Пользователь создан! ID: {{ successId }}</div>
-
-    <router-link to="/">← Назад</router-link>
   </div>
 </template>
 
@@ -75,26 +78,87 @@ const register = async () => {
 </script>
 
 <style scoped>
-.register {
-  max-width: 500px;
-  margin: 0 auto;
+.register-container {
+  max-width: 400px;
+  margin: 50px auto;
   padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f9f9f9;
 }
-.register label {
+.register-form h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.form-group {
+  margin-bottom: 15px;
+}
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.auth-btn {
+  padding: 10px 20px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+  background: white;
+  transition: all 0.2s;
+}
+
+.auth-btn:hover {
+  background: #007bff;
+  color: white;
+}
+
+.login-btn {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.back-btn {
+  border-color: #6c757d;
+  color: #6c757d;
+}
+
+.back-btn:hover {
+  background: #6c757d;
+  color: white;
+}
+.form-group label {
   display: block;
-  margin: 10px 0 5px;
+  margin-bottom: 5px;
+  font-weight: bold;
 }
-.register input {
+.form-group input {
   width: 100%;
   padding: 8px;
-  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 .error {
   color: red;
   margin-top: 10px;
+  text-align: center;
 }
 .success {
   color: green;
   margin-top: 10px;
+  text-align: center;
+}
+.back-btn {
+  border-color: #6c757d;
+  color: #6c757d;
+}
+.back-btn:hover {
+  background: #6c757d;
+  color: white;
 }
 </style>

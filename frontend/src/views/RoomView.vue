@@ -12,49 +12,79 @@
       <div v-else class="room-placeholder">Нет изображения</div>
     </div>
 
-    <div
-      v-if="isOccupied"
-      class="p-4 mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg"
-    >
-      ❗ Номер забронирован. Посмотрите в календаре свободные даты.
-    </div>
-    <div
-      v-else
-      class="p-4 mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg"
-    >
-      ✅ Номер свободен.
-    </div>
-
-    <div
-      v-if="!isOccupied && availability.nextBookingStart"
-      class="p-4 mb-6 bg-blue-50 border-l-4 border-blue-500 text-blue-700 rounded-lg"
-    >
-      📅 Следующая бронь: с {{ formatDate(availability.nextBookingStart) }}
+    <div class="p-4 mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg">
+      ✅ Просмотрите доступные даты в календаре ниже.
     </div>
 
     <div class="mb-6">
       <label class="block text-lg font-medium text-gray-700 mb-3">
         Выберите период бронирования:
       </label>
-      <flat-pickr
-        v-model="selectedRange"
-        :config="flatpickrConfig"
-        @on-change="onDateChange"
-        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        placeholder="Выберите даты"
-      />
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="date-input-container">
+          <label class="block mb-2">Заезд:</label>
+          <input
+            type="date"
+            v-model="checkIn"
+            :min="today"
+            :class="{ 'bg-gray-200': isDateDisabled(checkIn) }"
+            @change="validateDates"
+          />
+        </div>
+        <div class="date-input-container">
+          <label class="block mb-2">Выезд:</label>
+          <input
+            type="date"
+            v-model="checkOut"
+            :min="checkIn || today"
+            :class="{ 'bg-gray-200': isDateDisabled(checkOut) }"
+            @change="validateDates"
+          />
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <p class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" class="text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Занятые даты:
+        </p>
+
+        <div
+          v-if="disabledDates.length > 0"
+          class="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200"
+        >
+          <span
+            v-for="date in disabledDates"
+            :key="date"
+            class="px-2.5 py-1.5 bg-white text-gray-800 rounded text-xs font-medium flex items-center gap-1.5 shadow-sm border border-gray-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" class="text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            {{ formatDate(date) }}
+          </span>
+        </div>
+
+        <div v-else class="flex items-center gap-2 p-3 bg-green-50 text-green-700 rounded-lg border border-green-200">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm font-medium">Нет бронирований — все даты свободны!</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Кнопка -->
     <button
       @click="bookRoom"
       :disabled="!canBook"
-      class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow transition"
+      class="auth-btn manage-btn w-full"
     >
       Забронировать
     </button>
 
-    <!-- Сообщения -->
     <div v-if="error" class="mt-4 p-3 bg-red-100 text-red-700 rounded">
       {{ error }}
     </div>
@@ -62,7 +92,7 @@
       ✅ Бронирование успешно создано!
     </div>
 
-    <router-link to="/" class="mt-6 inline-block text-blue-600 hover:text-blue-800 font-medium">
+    <router-link to="/" class="auth-btn back-btn mt-6">
       ← Назад к списку номеров
     </router-link>
   </div>
@@ -71,114 +101,88 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import flatPickr from 'vue-flatpickr-component';
-import 'flatpickr/dist/flatpickr.css';
-import 'flatpickr/dist/themes/material_blue.css';
-import { getRoomById, getBookingsByRoom, getRoomAvailability, createBooking } from '@/services/roomService';
+import { getRoomById, getBookingsByRoom, createBooking } from '@/services/roomService';
 
 const route = useRoute();
 const roomId = parseInt(route.params.id);
 
 const room = ref({});
-const selectedRange = ref([]);
+const bookings = ref([]);
+const checkIn = ref('');
+const checkOut = ref('');
 const error = ref('');
 const success = ref(false);
-const availability = ref({
-  status: 'LOADING',
-  nextAvailableDate: null,
-  nextBookingStart: null
-});
 
+const today = new Date().toISOString().split('T')[0];
 const disabledDates = ref([]);
-
-const flatpickrConfig = ref({
-  mode: 'range',
-  dateFormat: 'Y-m-d',
-  minDate: 'today',
-  disable: [],
-  onDayCreate: (dObj, dStr, fp, dayElem) => {
-    if (disabledDates.value.includes(dStr)) {
-      dayElem.classList.add('flatpickr-disabled-visual');
-    }
-  }
-});
-
-// watch(disabledDates, (newVal) => {
-//   flatpickrConfig.value.disable = newVal;
-// });
-
-const isOccupied = computed(() => {
-  return availability.value.status === 'OCCUPIED';
-});
-
-const canBook = computed(() => {
-  return selectedRange.value && selectedRange.value.length === 2;
-});
 
 const loadRoomData = async () => {
   try {
-    error.value = '';
     room.value = (await getRoomById(roomId)).data;
-    const bookingsRes = await getBookingsByRoom(roomId);
-    const bookings = bookingsRes.data;
-
-    const availRes = await getRoomAvailability(roomId);
-    availability.value = availRes.data;
+    const res = await getBookingsByRoom(roomId);
+    bookings.value = res.data;
 
     const dates = new Set();
-    bookings.forEach(b => {
-
-      const start = b.checkIn.split('-').map(Number);
-      const end = b.checkOut.split('-').map(Number);
-      let current = new Date(start[0], start[1] - 1, start[2]);
-      const endDate = new Date(end[0], end[1] - 1, end[2]);
-      while (current <= endDate) {
-
-        const y = current.getFullYear();
-        const m = String(current.getMonth() + 1).padStart(2, '0');
-        const d = String(current.getDate()).padStart(2, '0');
-        dates.add(`${y}-${m}-${d}`);
+    bookings.value.forEach(b => {
+      const start = new Date(b.checkIn);
+      const end = new Date(b.checkOut);
+      let current = new Date(start);
+      while (current <= end) {
+        dates.add(current.toISOString().split('T')[0]);
         current.setDate(current.getDate() + 1);
       }
     });
-    disabledDates.value = Array.from(dates);
-    flatpickrConfig.value.disable = Array.from(dates);
-  } catch (error) {
+    disabledDates.value = Array.from(dates).sort();
+  } catch (err) {
     error.value = '❌ Ошибка загрузки данных';
   }
 };
 
-const onDateChange = (selectedDates) => {
-  if (selectedDates && selectedDates.length === 2) {
-    selectedRange.value = selectedDates;
+const isDateDisabled = (date) => {
+  if (!date) return false;
+  return disabledDates.value.includes(date);
+};
+
+const validateDates = () => {
+  if (isDateDisabled(checkIn.value) || isDateDisabled(checkOut.value)) {
+    error.value = 'Выбраны занятые даты';
+  } else {
+    error.value = '';
   }
 };
+
+const canBook = computed(() => {
+  return (
+    checkIn.value &&
+    checkOut.value &&
+    checkOut.value > checkIn.value &&
+    !isDateDisabled(checkIn.value) &&
+    !isDateDisabled(checkOut.value)
+  );
+});
 
 const bookRoom = async () => {
   if (!canBook.value) return;
 
-  const [checkIn, checkOut] = selectedRange.value;
-  const userId = 1;
-
   try {
-    await createBooking(userId, roomId, checkIn, checkOut);
+    await createBooking(1, roomId, checkIn.value, checkOut.value);
     success.value = true;
     error.value = '';
 
     setTimeout(() => {
-      selectedRange.value = [];
+      checkIn.value = '';
+      checkOut.value = '';
       success.value = false;
-      loadRoomData();
-    }, 600);
+      loadRoomData(); // обновить занятые даты
+    }, 1000);
   } catch (err) {
     error.value = '❌ ' + (err.response?.data || 'Не удалось забронировать');
-    success.value = false;
   }
 };
 
 const formatDate = (isoDate) => {
   if (!isoDate) return '';
-  return isoDate.split('-').reverse().join('.');
+  return isoDate.split('-').slice(1).reverse().join('.');
 };
 
 onMounted(() => {
@@ -187,24 +191,49 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.flatpickr-disabled-visual {
-  background-color: #fee2e2 !important;
-  color: #dc2626 !important;
-  pointer-events: none !important;
-  position: relative;
+.auth-btn {
+  padding: 10px 20px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.2s;
+  background: white;
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 }
-.flatpickr-disabled-visual::after {
-  content: "✘";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 10px;
-  color: #b91c1c;
+
+.auth-btn:hover {
+  background: #007bff;
+  color: white;
 }
+
+.manage-btn {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.back-btn {
+  border-color: #6c757d;
+  color: #6c757d;
+  width: auto !important;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.back-btn:hover {
+  background: #6c757d;
+  color: white;
+}
+
+/* Остальные стили без изменений */
 .room-image-wrapper {
   width: 700px;
-  height: 360px;
+  height: 320px;
   border-radius: 12px;
   overflow: hidden;
   background: #f8f9fa;
@@ -224,5 +253,16 @@ onMounted(() => {
 .room-placeholder {
   color: #999;
   font-style: italic;
+}
+.date-input-container {
+  width: 200px;
+}
+
+input[type="date"] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
 }
 </style>
