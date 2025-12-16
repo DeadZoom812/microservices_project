@@ -21,14 +21,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register").permitAll()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/users/register", "/api/users/auth/login","/api/rooms/*").permitAll()
+                        .requestMatchers("/api/bookings").authenticated()
+                        .anyRequest().authenticated()
                 )
-                .httpBasic(AbstractHttpConfigurer::disable);
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .formLogin(formLogin -> formLogin.disable());
 
         return http.build();
     }
+
 }

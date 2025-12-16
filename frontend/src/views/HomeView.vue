@@ -1,7 +1,6 @@
 <template>
   <div class="home">
     <h1>Отель Miracle</h1>
-    <router-link to="/register" class="register-link">Зарегистрироваться</router-link>
     <div class="search-box">
       <div class="date-inputs">
         <label>Заезд:</label>
@@ -11,6 +10,13 @@
       </div>
       <button @click="search" :disabled="!searchCheckIn || !searchCheckOut">Найти</button>
       <button v-if="isFiltered" @click="showAll">Показать все</button>
+
+      <router-link to="/register" class="btn btn-outline">
+        Зарегистрироваться
+      </router-link>
+      <router-link to="/profile" class="btn btn-outline">
+        Профиль
+      </router-link>
     </div>
 
     <div v-if="loading" class="loading">Загрузка...</div>

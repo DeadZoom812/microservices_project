@@ -22,48 +22,50 @@
           placeholder="Введите пароль"
         />
       </div>
-      <button type="submit" :disabled="loading" class="btn">
-        {{ loading ? 'Вход...' : 'Войти' }}
-      </button>
+      <form @submit.prevent="handleLogin">
+        <button type="submit" :disabled="loading">
+          {{ loading ? 'Вход...' : 'Войти' }}
+        </button>
+      </form>
+      <router-link to="/register" class="btn btn-outline">
+        Зарегистрироваться
+      </router-link>
       <div v-if="error" class="error">{{ error }}</div>
     </form>
   </div>
 </template>
 
-<script>
-import axios from 'axios';
+<script setup>
+import { ref } from 'vue'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
 
-export default {
-  name: 'LoginView',
-  data() {
-    return {
-      login: '',
-      password: '',
-      loading: false,
-      error: null
-    };
-  },
-  methods: {
-    async login() {
-      this.loading = true;
-      this.error = null;
-      try {
-        const response = await axios.post('http://localhost:8081/api/auth/login', {
-          login: this.login,
-          password: this.password
-        });
+const login = ref('')
+const password = ref('')
+const loading = ref(false)
+const error = ref(null)
 
-        localStorage.setItem('user', JSON.stringify(response.data));
-        this.$router.push('/profile');
-      } catch (err) {
-        console.error('Login error:', err);
-        this.error = 'Неверный логин или пароль';
-      } finally {
-        this.loading = false;
-      }
-    }
+const router = useRouter()
+
+const handleLogin = async () => {
+  loading.value = true
+  error.value = null
+
+  try {
+    const response = await axios.post('http://localhost:8081/api/users/auth/login', {
+      login: login.value,
+      password: password.value
+    })
+
+    localStorage.setItem('user', JSON.stringify(response.data))
+    await router.push('/profile')
+  } catch (err) {
+    console.error('Login error:', err)
+    error.value = 'Неверный логин или пароль'
+  } finally {
+    loading.value = false
   }
-};
+}
 </script>
 
 <style scoped>

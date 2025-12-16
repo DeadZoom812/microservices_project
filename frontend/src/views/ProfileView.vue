@@ -6,34 +6,36 @@
     <p><strong>Фамилия:</strong> {{ user.lastName }}</p>
     <p><strong>Отчество:</strong> {{ user.middleName || '—' }}</p>
     <button @click="logout" class="btn">Выйти</button>
+    <router-link to="/home" class="btn btn-outline">
+      Главная страница
+    </router-link>
   </div>
   <div v-else>
     <p>Вы не авторизованы. <router-link to="/login">Войти</router-link></p>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ProfileView',
-  data() {
-    return {
-      user: null
-    };
-  },
-  mounted() {
-    this.user = JSON.parse(localStorage.getItem('user'));
-    if (!this.user) {
-      this.$router.push('/login');
-    }
-  },
-  methods: {
-    logout() {
-      localStorage.removeItem('user');
-      this.user = null;
-      this.$router.push('/login');
-    }
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const user = ref(null)
+const router = useRouter()
+
+const logout = () => {
+  localStorage.removeItem('user')
+  user.value = null
+  router.push('/login')
+}
+
+onMounted(() => {
+  const storedUser = localStorage.getItem('user')
+  if (storedUser) {
+    user.value = JSON.parse(storedUser)
+  } else {
+    router.push('/login')
   }
-};
+})
 </script>
 
 <style scoped>
